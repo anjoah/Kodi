@@ -339,6 +339,7 @@ ConnectionState CPosixConnection::GetState() const
     if (ioctl(m_socket, SIOCGIWNAME, &wrq) < 0)
       return NETWORK_CONNECTION_STATE_DISCONNECTED;
 
+/* Fails to connect with long ssid's
 #if !defined(TARGET_ANDROID)
     // since the wifi interface can be connected to
     // any wifi access point, we need to compare the assigned
@@ -361,6 +362,7 @@ ConnectionState CPosixConnection::GetState() const
     if (m_essid != test_essid)
       return NETWORK_CONNECTION_STATE_DISCONNECTED;
 #endif
+*/
   }
 
   // finally, we need to see if we have a gateway assigned to our interface.
@@ -704,7 +706,7 @@ bool CPosixConnection::DoConnection(const CIPConfig &ipconfig, std::string passp
   // wait for wap to connect to the AP and udhcp to fetch an IP
   if (m_type == NETWORK_CONNECTION_TYPE_WIFI)
   {
-    for (int i = 0; i < 60; ++i)
+    for (int i = 0; i < 90; ++i)
     {
       if (GetState() == NETWORK_CONNECTION_STATE_CONNECTED)
         break;
