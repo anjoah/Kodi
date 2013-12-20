@@ -176,7 +176,7 @@ void CGUIDialogAccessPoints::UpdateConnectionList()
 
     if (m_use_ipconfig)
     {
-      if (connection_name == m_ipname)
+      if (connection_name.find(m_ipname) != std::string::npos)
         connectedItem = i;
     }
     else
