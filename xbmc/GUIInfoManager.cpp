@@ -18,6 +18,7 @@
  *
  */
 
+#include "network/Network.h"
 #include "system.h"
 #include "GUIInfoManager.h"
 #include "windows/GUIMediaWindow.h"
@@ -1512,6 +1513,7 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow, CStdString *fa
     break;
 
   case SYSTEM_VIDEO_ENCODER_INFO:
+  case NETWORK_MAC_ADDRESS:
   case SYSTEM_KERNEL_VERSION:
   case SYSTEM_CPUFREQUENCY:
   case SYSTEM_INTERNET_STATE:
@@ -1710,7 +1712,7 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow, CStdString *fa
     {
       CStdString friendlyName = g_guiSettings.GetString("services.devicename");
       if (friendlyName.Equals("XBMC"))
-        strLabel.Format("%s (%s)", friendlyName.c_str(), g_application.getNetworkManager().GetDefaultConnectionName().c_str());
+        strLabel.Format("%s (%s)", friendlyName.c_str(), g_application.getNetwork().GetHostName().c_str());
       else
         strLabel = friendlyName;
     }
@@ -1757,20 +1759,39 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow, CStdString *fa
     break;
 #endif
   case NETWORK_IP_ADDRESS:
-      return g_application.getNetworkManager().GetDefaultConnectionAddress();
+    {
+      CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+      if (iface)
+        return iface->GetCurrentIPAddress();
+    }
     break;
   case NETWORK_SUBNET_MASK:
-    return g_application.getNetworkManager().GetDefaultConnectionNetmask();
-    break;
-  case NETWORK_MAC_ADDRESS:
-    return g_application.getNetworkManager().GetDefaultConnectionMacAddress();
+    {
+      CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+      if (iface)
+        return iface->GetCurrentNetmask();
+    }
     break;
   case NETWORK_GATEWAY_ADDRESS:
-    return g_application.getNetworkManager().GetDefaultConnectionGateway();
+    {
+      CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+      if (iface)
+        return iface->GetCurrentDefaultGateway();
+    }
     break;
   case NETWORK_DNS1_ADDRESS:
+    {
+      vector<CStdString> nss = g_application.getNetwork().GetNameServers();
+      if (nss.size() >= 1)
+        return nss[0];
+    }
+    break;
   case NETWORK_DNS2_ADDRESS:
-    return g_application.getNetworkManager().GetDefaultConnectionNameServer();
+    {
+      vector<CStdString> nss = g_application.getNetwork().GetNameServers();
+      if (nss.size() >= 2)
+        return nss[1];
+    }
     break;
   case NETWORK_DHCP_ADDRESS:
     {
@@ -1782,7 +1803,8 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow, CStdString *fa
     {
       CStdString linkStatus = g_localizeStrings.Get(151);
       linkStatus += " ";
-      if (g_application.getNetworkManager().IsConnected())
+      CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+      if (iface && iface->IsConnected())
         linkStatus += g_localizeStrings.Get(15207);
       else
         linkStatus += g_localizeStrings.Get(15208);

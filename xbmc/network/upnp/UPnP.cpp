@@ -28,6 +28,7 @@
 #include "utils/URIUtils.h"
 #include "Application.h"
 #include "ApplicationMessenger.h"
+#include "network/Network.h"
 #include "utils/log.h"
 #include "Platinum.h"
 #include "URL.h"
@@ -203,7 +204,9 @@ CUPnP::CUPnP() :
     m_UPnP = new PLT_UPnP();
 
     // keep main IP around
-    m_IP = g_application.getNetworkManager().GetDefaultConnectionAddress().c_str();
+    if (g_application.getNetwork().GetFirstConnectedInterface()) {
+        m_IP = g_application.getNetwork().GetFirstConnectedInterface()->GetCurrentIPAddress().c_str();
+    }
     NPT_List<NPT_IpAddress> list;
     if (NPT_SUCCEEDED(PLT_UPnPMessageHelper::GetIPAddresses(list)) && list.GetItemCount()) {
         m_IP = (*(list.GetFirstItem())).ToString();

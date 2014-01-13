@@ -26,6 +26,7 @@
 #include "XMLUtils.h"
 #include "utils/POUtils.h"
 #include "Temperature.h"
+#include "network/Network.h"
 #include "Application.h"
 #include "settings/GUISettings.h"
 #include "settings/Settings.h"
@@ -73,7 +74,7 @@ CWeatherJob::CWeatherJob(int location)
 bool CWeatherJob::DoWork()
 {
   // wait for the network
-  if (!g_application.getNetworkManager().IsAvailable(true))
+  if (!g_application.getNetwork().IsAvailable(true))
     return false;
 
   AddonPtr addon;

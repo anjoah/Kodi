@@ -28,6 +28,7 @@
 #endif
 #include "GUIInfoManager.h"
 #include "filesystem/CurlFile.h"
+#include "network/Network.h"
 #include "Application.h"
 #include "windowing/WindowingFactory.h"
 #include "settings/Settings.h"
@@ -59,6 +60,7 @@ bool CSysInfoJob::DoWork()
   m_info.videoEncoder      = GetVideoEncoder();
   m_info.cpuFrequency      = GetCPUFreqInfo();
   m_info.kernelVersion     = CSysInfo::GetKernelVersion();
+  m_info.macAddress        = GetMACAddress();
   m_info.batteryLevel      = GetBatteryLevel();
   return true;
 }
@@ -85,6 +87,16 @@ CSysData::INTERNET_STATE CSysInfoJob::GetInternetState()
   if (http.IsInternet(false))
     return CSysData::NO_DNS;
   return CSysData::DISCONNECTED;
+}
+
+CStdString CSysInfoJob::GetMACAddress()
+{
+#if defined(HAS_LINUX_NETWORK) || defined(HAS_WIN32_NETWORK)
+  CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+  if (iface)
+    return iface->GetMacAddress();
+#endif
+  return "";
 }
 
 CStdString CSysInfoJob::GetVideoEncoder()

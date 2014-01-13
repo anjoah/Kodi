@@ -18,6 +18,7 @@
  *
  */
 
+#include "network/Network.h"
 #include "threads/SystemClock.h"
 #include "system.h"
 #include "Application.h"
@@ -248,7 +249,9 @@
 #include "pictures/GUIDialogPictureInfo.h"
 #include "addons/GUIDialogAddonSettings.h"
 #include "addons/GUIDialogAddonInfo.h"
+#ifdef HAS_LINUX_NETWORK
 #include "network/GUIDialogAccessPoints.h"
+#endif
 
 /* PVR related include Files */
 #include "pvr/PVRManager.h"
@@ -387,6 +390,7 @@ CApplication::CApplication(void)
   , m_musicInfoScanner(new CMusicInfoScanner)
   , m_seekHandler(new CSeekHandler)
 {
+  m_network = NULL;
   TiXmlBase::SetCondenseWhiteSpace(false);
   m_iPlaySpeed = 1;
   m_bInhibitIdleShutdown = false;
@@ -567,6 +571,14 @@ void CApplication::Preflight()
 
 bool CApplication::Create()
 {
+#if defined(HAS_LINUX_NETWORK)
+  m_network = new CNetworkLinux();
+#elif defined(HAS_WIN32_NETWORK)
+  m_network = new CNetworkWin32();
+#else
+  m_network = new CNetwork();
+#endif
+
   Preflight();
   g_settings.Initialize(); //Initialize default AdvancedSettings
 
@@ -639,7 +651,7 @@ bool CApplication::Create()
 
   CStdString executable = CUtil::ResolveExecutablePath();
   CLog::Log(LOGNOTICE, "The executable running is: %s", executable.c_str());
-  CLog::Log(LOGNOTICE, "Local hostname: %s", m_network.GetDefaultConnectionName().c_str());
+  CLog::Log(LOGNOTICE, "Local hostname: %s", m_network->GetHostName().c_str());
   CLog::Log(LOGNOTICE, "Log File is located: %sxbmc.log", g_settings.m_logFolder.c_str());
   CLog::Log(LOGNOTICE, "-----------------------------------------------------------------------");
 
@@ -735,8 +747,6 @@ bool CApplication::Create()
   SetHardwareVolume(g_settings.m_fVolumeLevel);
   CAEFactory::SetMute     (g_settings.m_bMute);
   CAEFactory::SetSoundMode(g_guiSettings.GetInt("audiooutput.guisoundmode"));
-
-  m_network.Initialize();
 
   // initialize the addon database (must be before the addon manager is init'd)
   CDatabaseManager::Get().Initialize(true);
@@ -1274,8 +1284,10 @@ bool CApplication::Initialize()
     g_windowManager.Add(new CGUIDialogBusy);
     g_windowManager.Add(new CGUIDialogPictureInfo);
     g_windowManager.Add(new CGUIDialogAddonInfo);
-    g_windowManager.Add(new CGUIDialogAddonSettings);      // window id = 140
-    g_windowManager.Add(new CGUIDialogAccessPoints);      // window id = 141
+    g_windowManager.Add(new CGUIDialogAddonSettings);
+#ifdef HAS_LINUX_NETWORK
+    g_windowManager.Add(new CGUIDialogAccessPoints);
+#endif
 
     g_windowManager.Add(new CGUIDialogLockSettings);
 
@@ -1403,7 +1415,6 @@ bool CApplication::Initialize()
 
   // reset our screensaver (starts timers etc.)
   ResetScreenSaver();
-  m_keyringManager.Initialize();
 
 #ifdef HAS_SDL_JOYSTICK
   g_Joystick.SetEnabled(g_guiSettings.GetBool("input.enablejoystick") &&
@@ -1510,7 +1521,7 @@ bool CApplication::StartServer(enum ESERVERS eServer, bool bStart, bool bWait/* 
 bool CApplication::StartWebServer()
 {
 #ifdef HAS_WEB_SERVER
-  if (g_guiSettings.GetBool("services.webserver") && m_network.IsAvailable())
+  if (g_guiSettings.GetBool("services.webserver") && m_network->IsAvailable())
   {
     int webPort = atoi(g_guiSettings.GetString("services.webserverport"));
     CLog::Log(LOGNOTICE, "Webserver: Starting...");
@@ -1566,7 +1577,7 @@ bool CApplication::StartAirplayServer()
 {
   bool ret = false;
 #ifdef HAS_AIRPLAY
-  if (g_guiSettings.GetBool("services.airplay") && m_network.IsAvailable())
+  if (g_guiSettings.GetBool("services.airplay") && m_network->IsAvailable())
   {
     int listenPort = g_advancedSettings.m_airPlayPort;
     CStdString password = g_guiSettings.GetString("services.airplaypassword");
@@ -1576,10 +1587,15 @@ bool CApplication::StartAirplayServer()
     {
       CAirPlayServer::SetCredentials(usePassword, password);
       std::vector<std::pair<std::string, std::string> > txt;
-      std::string mac = m_network.GetDefaultConnectionMacAddress();                                                                                                              
-      if (mac.empty())                                                                                                                                               
-        mac = "FF:FF:FF:FF:FF:F2";
-      txt.push_back(std::make_pair("deviceid", mac));
+      CNetworkInterface* iface = g_application.getNetwork().GetFirstConnectedInterface();
+      if (iface)
+      {
+        txt.push_back(std::make_pair("deviceid", iface->GetMacAddress()));
+      }
+      else
+      {
+        txt.push_back(std::make_pair("deviceid", "FF:FF:FF:FF:FF:F2"));
+      }
       txt.push_back(std::make_pair("features", "0x77"));
       txt.push_back(std::make_pair("model", "Xbmc,1"));
       txt.push_back(std::make_pair("srcvers", AIRPLAY_SERVER_VERSION_STR));
@@ -1591,7 +1607,7 @@ bool CApplication::StartAirplayServer()
 #endif
   {
 #ifdef HAS_AIRTUNES
-    if (g_guiSettings.GetBool("services.airplay") && m_network.IsAvailable())
+    if (g_guiSettings.GetBool("services.airplay") && m_network->IsAvailable())
     {
       int listenPort = g_advancedSettings.m_airTunesPort;
       CStdString password = g_guiSettings.GetString("services.airplaypassword");
@@ -1854,6 +1870,8 @@ void CApplication::StartServices()
 
 void CApplication::StopServices()
 {
+  m_network->NetworkMessage(CNetwork::SERVICES_DOWN, 0);
+
 #if !defined(_WIN32) && defined(HAS_DVD_DRIVE)
   CLog::Log(LOGNOTICE, "stop dvd detect media");
   m_DetectDVDType.StopThread();
@@ -3497,6 +3515,9 @@ bool CApplication::Cleanup()
     while(1); // execution ends
 #endif
 
+    delete m_network;
+    m_network = NULL;
+
     return true;
   }
   catch (...)
@@ -3631,8 +3652,6 @@ void CApplication::Stop(int exitCode)
       g_lcd=NULL;
     }
 #endif
-
-    m_network.StopServices();
 
     g_Windowing.DestroyRenderSystem();
     g_Windowing.DestroyWindow();
@@ -5124,7 +5143,6 @@ void CApplication::Process()
 void CApplication::ProcessSlow()
 {
   g_powerManager.ProcessEvents();
-  m_network.PumpNetworkEvents();
 
 #if defined(TARGET_DARWIN_OSX)
   // There is an issue on OS X that several system services ask the cursor to become visible
@@ -5900,14 +5918,9 @@ void CApplication::SetRenderGUI(bool renderGUI)
   m_renderGUI = renderGUI;
 }
 
-CNetworkManager& CApplication::getNetworkManager()
+CNetwork& CApplication::getNetwork()
 {
-  return m_network;
-}
-
-CKeyringManager& CApplication::getKeyringManager()
-{
-  return m_keyringManager;
+  return *m_network;
 }
 #ifdef HAS_PERFORMANCE_SAMPLE
 CPerformanceStats &CApplication::GetPerformanceStats()
