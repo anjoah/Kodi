@@ -330,6 +330,13 @@ void CAdvancedSettings::Initialize()
   m_databaseVideo.Reset();
 
   m_logLevelHint = m_logLevel = LOG_LEVEL_NORMAL;
+
+  m_hideTotaluptime = false;
+  m_hideBattery = false;
+  m_hideGPUtemp = false;
+  m_hideCPUrev = false;
+  m_hideCPUserial = false;
+  m_hideCPUtemp = false;
 }
 
 bool CAdvancedSettings::Load()
@@ -784,6 +791,13 @@ void CAdvancedSettings::ParseSettingsFile(const CStdString &file)
   XMLUtils::GetFloat(pRootElement,"sleepbeforeflip", m_sleepBeforeFlip, 0.0f, 1.0f);
   XMLUtils::GetBoolean(pRootElement,"virtualshares", m_bVirtualShares);
   XMLUtils::GetUInt(pRootElement, "packagefoldersize", m_addonPackageFolderSize);
+
+  XMLUtils::GetBoolean(pRootElement, "hidetotaluptime", m_hideTotaluptime);
+  XMLUtils::GetBoolean(pRootElement, "hidebattery", m_hideBattery);
+  XMLUtils::GetBoolean(pRootElement, "hidegputemp", m_hideGPUtemp);
+  XMLUtils::GetBoolean(pRootElement, "hidecpurev", m_hideCPUrev);
+  XMLUtils::GetBoolean(pRootElement, "hidecpuserial", m_hideCPUserial);
+  XMLUtils::GetBoolean(pRootElement, "hidecputemp", m_hideCPUtemp);
 
   //Tuxbox
   pElement = pRootElement->FirstChildElement("tuxbox");

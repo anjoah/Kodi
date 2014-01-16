@@ -373,6 +373,13 @@ class CAdvancedSettings
     bool m_initialized;
 
     void SetDebugMode(bool debug);
+
+    bool m_hideTotaluptime;
+    bool m_hideBattery;
+    bool m_hideGPUtemp;
+    bool m_hideCPUrev;
+    bool m_hideCPUserial;
+    bool m_hideCPUtemp;
 };
 
 XBMC_GLOBAL(CAdvancedSettings,g_advancedSettings);
