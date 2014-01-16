@@ -271,7 +271,28 @@ bool CAESinkALSA::InitializeHW(AEAudioFormat &format)
   snd_pcm_hw_params_set_access(m_pcm, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);
 
   unsigned int sampleRate   = format.m_sampleRate;
-#if !defined(HAS_AML_M6) && defined(HAS_LIBAMCODEC)
+#if defined(HAS_AML_M6) && defined(HAS_LIBAMCODEC) // M6 devices
+  // remap non-working sample rates
+  switch(sampleRate)
+  {
+    case 5512:
+    case 11025:
+    case 22050:
+      sampleRate = 44100;
+      break;
+    case 176400:
+      sampleRate = 88200;
+      break;
+    case 8000:
+    case 16000:
+    case 24000:
+      sampleRate = 32000;
+      break;
+    case 384000:
+      sampleRate = 192000;
+      break;
+  }
+#elif defined(HAS_LIBAMCODEC) // M1/M3 devices
   // alsa/kernel lies, so map everything to 44100 or 48000
   switch(sampleRate)
   {
