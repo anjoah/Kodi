@@ -104,8 +104,8 @@ namespace XFILE
     CmdExtract* m_pExtract;
     CRarFileExtractThread* m_pExtractThread;
 #endif
-    BYTE* m_szBuffer;
-    BYTE* m_szStartOfBuffer;
+    uint8_t* m_szBuffer;
+    uint8_t* m_szStartOfBuffer;
     int64_t m_iDataInBuffer;
     int64_t m_iBufferStart;
   };
