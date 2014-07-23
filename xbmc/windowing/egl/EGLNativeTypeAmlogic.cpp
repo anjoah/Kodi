@@ -150,6 +150,10 @@ bool CEGLNativeTypeAmlogic::SetNativeResolution(const RESOLUTION_INFO &res)
           else
             SetDisplayResolution("1080p");
           break;
+        case 720:
+          if (!IsHdmiConnected())
+            SetDisplayResolution("480cvbs");
+          break;
       }
       break;
     case 50:
@@ -164,6 +168,10 @@ bool CEGLNativeTypeAmlogic::SetNativeResolution(const RESOLUTION_INFO &res)
             SetDisplayResolution("1080i50hz");
           else
             SetDisplayResolution("1080p50hz");
+          break;
+        case 720:
+          if (!IsHdmiConnected())
+            SetDisplayResolution("576cvbs");
           break;
       }
       break;
@@ -180,9 +188,18 @@ bool CEGLNativeTypeAmlogic::SetNativeResolution(const RESOLUTION_INFO &res)
 
 bool CEGLNativeTypeAmlogic::ProbeResolutions(std::vector<RESOLUTION_INFO> &resolutions)
 {
-  char valstr[256] = {0};
-  aml_get_sysfs_str("/sys/class/amhdmitx/amhdmitx0/disp_cap", valstr, 255);
-  std::vector<std::string> probe_str = StringUtils::Split(valstr, "\n");
+  std::vector<std::string> probe_str;
+  if (IsHdmiConnected())
+  {
+    char valstr[256] = {0};
+    aml_get_sysfs_str("/sys/class/amhdmitx/amhdmitx0/disp_cap", valstr, 255);
+    probe_str = StringUtils::Split(valstr, "\n");
+  }
+  else
+  {
+    probe_str.push_back("480cvbs");
+    probe_str.push_back("576cvbs");
+  }
 
   resolutions.clear();
   RESOLUTION_INFO res;
@@ -200,8 +217,11 @@ bool CEGLNativeTypeAmlogic::GetPreferredResolution(RESOLUTION_INFO *res) const
   // check display/mode, it gets defaulted at boot
   if (!GetNativeResolution(res))
   {
-    // punt to 720p if we get nothing
-    aml_mode_to_resolution("720p", res);
+    // punt to 720p or 576cvbs if we get nothing
+    if (IsHdmiConnected())
+      aml_mode_to_resolution("720p", res);
+    else
+      aml_mode_to_resolution("576cvbs", res);
   }
 
   return true;
@@ -303,4 +323,11 @@ void CEGLNativeTypeAmlogic::DisableFreeScale()
     }
     close(fd0);
   }
+}
+
+bool CEGLNativeTypeAmlogic::IsHdmiConnected() const
+{
+  char hpd_state[2] = {0};
+  aml_get_sysfs_str("/sys/class/amhdmitx/amhdmitx0/hpd_state", hpd_state, 2);
+  return hpd_state[0] == '1';
 }
