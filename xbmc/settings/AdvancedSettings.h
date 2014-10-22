@@ -391,6 +391,12 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
     float GetDisplayLatency(float refreshrate);
     bool m_initialized;
 
+    bool m_hideTotaluptime;
+    bool m_hideBattery;
+    bool m_hideCPUrev;
+    bool m_hideCPUserial;
+    bool m_hideCPUtemp;
+
     void SetDebugMode(bool debug);
 
     // runtime settings which cannot be set from advancedsettings.xml
