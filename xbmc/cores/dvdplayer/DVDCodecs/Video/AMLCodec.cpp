@@ -1910,14 +1910,11 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   g_renderManager.RegisterRenderFeaturesCallBack((const void*)this, RenderFeaturesCallBack);
 
   m_display_rect = g_graphicsContext.GetViewWindow();
-  if ((aml_get_device_type() == AML_DEVICE_TYPE_M8) || (aml_get_device_type() == AML_DEVICE_TYPE_M8B))
-  {
-    char mode[256] = {0};
-    aml_get_sysfs_str("/sys/class/display/mode", mode, 255);
-    RESOLUTION_INFO res;
-    if (aml_mode_to_resolution(mode, &res))
-      m_display_rect = CRect(0, 0, res.iScreenWidth, res.iScreenHeight);
-  }
+  char mode[256] = {0};
+  aml_get_sysfs_str("/sys/class/display/mode", mode, 255);
+  RESOLUTION_INFO res;
+  if (aml_mode_to_resolution(mode, &res))
+    m_display_rect = CRect(0, 0, res.iScreenWidth, res.iScreenHeight);
 
 /*
   // if display is set to 1080xxx, then disable deinterlacer for HD content
