@@ -65,7 +65,6 @@ void CEGLNativeTypeAmlogic::Initialize()
   aml_permissions();
   aml_cpufreq_min(true);
   aml_cpufreq_max(true);
-  DisableFreeScale();
   return;
 }
 void CEGLNativeTypeAmlogic::Destroy()
@@ -252,9 +251,16 @@ bool CEGLNativeTypeAmlogic::SetDisplayResolution(const char *resolution)
   // switch display resolution
   aml_set_sysfs_str("/sys/class/display/mode", modestr.c_str());
 
+  DisableFreeScale();
+
   RESOLUTION_INFO res;
   aml_mode_to_resolution(modestr, &res);
   SetFramebufferResolution(res);
+
+  if (StringUtils::StartsWith(modestr, "4k2k"))
+  {
+    EnableFreeScale();
+  }
 
   return true;
 }
@@ -324,7 +330,15 @@ void CEGLNativeTypeAmlogic::DisableFreeScale()
 
 void CEGLNativeTypeAmlogic::SetFramebufferResolution(const RESOLUTION_INFO &res) const
 {
-  SetFramebufferResolution(res.iScreenWidth, res.iScreenHeight);
+  char mode[256] = {0};
+  aml_get_sysfs_str("/sys/class/display/mode", mode, 255);
+
+  if (StringUtils::StartsWith(mode, "4k2k"))
+  {
+    SetFramebufferResolution(res.iWidth, res.iHeight);
+  } else {
+    SetFramebufferResolution(res.iScreenWidth, res.iScreenHeight);
+  }
 }
 
 void CEGLNativeTypeAmlogic::SetFramebufferResolution(int width, int height) const

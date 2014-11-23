@@ -1914,7 +1914,12 @@ bool CAMLCodec::OpenDecoder(CDVDStreamInfo &hints)
   aml_get_sysfs_str("/sys/class/display/mode", mode, 255);
   RESOLUTION_INFO res;
   if (aml_mode_to_resolution(mode, &res))
-    m_display_rect = CRect(0, 0, res.iScreenWidth, res.iScreenHeight);
+    if (StringUtils::StartsWith(mode, "4k2k"))
+    {
+      m_display_rect = CRect(0, 0, res.iWidth, res.iHeight);
+    } else {
+      m_display_rect = CRect(0, 0, res.iScreenWidth, res.iScreenHeight);
+    }
 
 /*
   // if display is set to 1080xxx, then disable deinterlacer for HD content
