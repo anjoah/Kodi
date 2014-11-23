@@ -247,17 +247,17 @@ bool CEGLNativeTypeAmlogic::ShowWindow(bool show)
 
 bool CEGLNativeTypeAmlogic::SetDisplayResolution(const char *resolution)
 {
-  CStdString modestr = resolution;
+  CStdString mode = resolution;
   // switch display resolution
-  aml_set_sysfs_str("/sys/class/display/mode", modestr.c_str());
+  aml_set_sysfs_str("/sys/class/display/mode", mode.c_str());
 
   DisableFreeScale();
 
   RESOLUTION_INFO res;
-  aml_mode_to_resolution(modestr, &res);
+  aml_mode_to_resolution(mode, &res);
   SetFramebufferResolution(res);
 
-  if (StringUtils::StartsWith(modestr, "4k2k"))
+  if (StringUtils::StartsWith(mode, "4k2k"))
   {
     EnableFreeScale();
   }
