@@ -5058,6 +5058,14 @@ void CApplication::Process()
   {
     m_loggingIn = false;
 
+    // sysexec.py - xbmc
+    CStdString strSysExecPy = CSpecialProtocol::TranslatePath("special://xbmc/sysexec.py");
+
+    if (XFILE::CFile::Exists(strSysExecPy))
+      CScriptInvocationManager::Get().Execute(strSysExecPy);
+    else
+      CLog::Log(LOGDEBUG, "no xbmc sysexec.py (%s) found, skipping", strSysExecPy.c_str());
+
     // autoexec.py - profile
     CStdString strAutoExecPy = CSpecialProtocol::TranslatePath("special://profile/autoexec.py");
 
