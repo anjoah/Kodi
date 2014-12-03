@@ -249,6 +249,15 @@ KeyMap keyMap[] = {
   { KEY_FASTFORWARD   , XBMCK_FASTFORWARD },
   { KEY_PRINT         , XBMCK_PRINT       },
   { KEY_QUESTION      , XBMCK_HELP        },
+  { 133               , XBMCK_F16         },
+  { 134               , XBMCK_F17         },
+  { 135               , XBMCK_F18         },
+  { 136               , XBMCK_F19         },
+  { 137               , XBMCK_F20         },
+  { 138               , XBMCK_F21         },
+  { 139               , XBMCK_F22         },
+  { 140               , XBMCK_F23         },
+  { 141               , XBMCK_F24         },
   // The Little Black Box Remote Additions
   { 384               , XBMCK_LEFT        }, // Red
   { 378               , XBMCK_RIGHT       }, // Green
