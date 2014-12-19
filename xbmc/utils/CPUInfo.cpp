@@ -525,7 +525,7 @@ bool CCPUInfo::getTemperature(CTemperature& temperature)
   scale = 'c';
 #elif defined(TARGET_ANDROID)
 #ifdef HAS_LIBAMCODEC
-  if (aml_get_cputype() == 6) // Meson6 only
+  if (aml_get_device_type() == AML_DEVICE_TYPE_M6) // Meson6 only
   {
     if (-1 == (value = aml_get_sysfs_int("/sys/class/saradc/temperature")))
       value = 0;
