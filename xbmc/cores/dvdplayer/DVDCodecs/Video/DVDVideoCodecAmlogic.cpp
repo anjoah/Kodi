@@ -214,7 +214,7 @@ int CDVDVideoCodecAmlogic::Decode(uint8_t *pData, int iSize, double dts, double 
 {
   // Handle Input, add demuxer packet to input queue, we must accept it or
   // it will be discarded as DVDPlayerVideo has no concept of "try again".
-  if (pData)
+  if (pData && iSize)
   {
     int demuxer_bytes = iSize;
     uint8_t *demuxer_content = pData;
